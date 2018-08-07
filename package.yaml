@@ -21,20 +21,22 @@ description:         Please see the README on GitHub at <https://github.com/hygx
 
 dependencies:
 - base >= 4.7 && < 5
+- text
+- attoparsec
 
 library:
   source-dirs: src
 
-executables:
-  hjq-exe:
-    main:                Main.hs
-    source-dirs:         app
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - hjq
+# executables:
+#   hjq-exe:
+#     main:                Main.hs
+#     source-dirs:         app
+#     ghc-options:
+#     - -threaded
+#     - -rtsopts
+#     - -with-rtsopts=-N
+#     dependencies:
+#     - hjq
 
 tests:
   hjq-test:
@@ -46,3 +48,5 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - hjq
+    - hspec
+    - QuickCheck

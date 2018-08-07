@@ -16,52 +16,34 @@ data JqFilter
     | JqNil
     deriving (Eq)
 
-instance Read JqFilter
-  where
-    readsPrec _ s = case parseJqFilter (Text.pack s) of
-        Right jf -> [(jf, "")]
-        Left _   -> []
-
-instance Show JqFilter
-  where
-    show JqNil = "."
-    show (JqField s jf) = case jf of
-        JqIndex i jf' ->
-            "." ++ Text.unpack s ++ "[" ++ show i ++ "]" ++ show' jf'
-        _ ->
-            "." ++ Text.unpack s ++ show' jf
-    show (JqIndex i jf) = "." ++ "[" ++ show i ++ "]" ++ show' jf
-
-show' JqNil = ""
-show' jf    = show jf
+instance Read JqFilter where
+    readsPrec _ s = case parseJqFilter s of
+        Right r -> [(r, "")]
+        Left _  -> []
 
 parseJqFilter :: Text -> Either Text JqFilter
 parseJqFilter s = case parse (jqFilterParser <* endOfInput) s `feed` "" of
-    Done _ jf -> Right jf
-    jf        -> Left . Text.pack $ show jf
+    Done _ r -> Right r
+    r        -> Left . Text.pack $ show r
 
 jqFilterParser :: Parser JqFilter
-jqFilterParser = jqFilter <|> jqIdentity
+jqFilterParser = jqIndexedField <|> jqField <|> jqIndex <|> jqNil
   where
-    jqFilter = jqIndexedField <|> jqField <|> jqIndex <|> jqNil
-
     jqIndexedField = toIndexedField <$ char '.'
         <*> fieldParser
         <*> indexParser
-        <*> jqFilter
+        <*> jqFilterParser
       where toIndexedField x y z = JqField x (JqIndex y z)
 
     jqField = JqField <$ char '.'
         <*> fieldParser
-        <*> jqFilter
+        <*> jqFilterParser
 
     jqIndex = JqIndex <$ char '.'
         <*> indexParser
-        <*> jqFilter
+        <*> jqFilterParser
 
-    jqIdentity = char '.' *> jqNil
-
-    jqNil = endOfInput *> pure JqNil
+    jqNil = char '.' *> pure JqNil <|> pure JqNil
 
     fieldParser = Text.pack <$> many1 letter
 
